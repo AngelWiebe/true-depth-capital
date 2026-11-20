@@ -1,3 +1,4 @@
+import { retryableLoad, waterBackdrop } from './loading.js';
 import { loadImage, underwaterSource, watchUnderwater } from './artwork.js';
 import { isMotionPaused, motionChange } from './motion.js';
 
@@ -28,6 +29,20 @@ import { isMotionPaused, motionChange } from './motion.js';
     for(let y=0;y<c.height;y+=2){for(let k=0;k<c.width;k+=2){if(data[(y*c.width+k)*4+3]>20){minX=Math.min(minX,k);minY=Math.min(minY,y);maxX=Math.max(maxX,k);maxY=Math.max(maxY,y);}}}
     if(maxX<=minX||maxY<=minY)return {x:0,y:0,w:c.width,h:c.height};
     return {x:Math.max(0,minX-4),y:Math.max(0,minY-4),w:Math.min(c.width-minX+4,maxX-minX+8),h:Math.min(c.height-minY+4,maxY-minY+8)};
+  }
+  const loadUnderwater=retryableLoad(
+    ()=>loadImage(underwaterSource()),
+    image=>{
+      underwater=image;
+      watchUnderwater(image,image=>{underwater=image;schedule();});
+      schedule();
+    },
+  );
+  const loadWildlife=retryableLoad(()=>wildlife.load(),()=>schedule());
+  function prepareUnderwater(){
+    if(isMotionPaused())return;
+    loadUnderwater();
+    loadWildlife();
   }
   function schedule(){
     if(ready&&!frame&&visible&&(!isMotionPaused()||document.body.classList.contains('at-surface')))frame=requestAnimationFrame(render);
@@ -89,8 +104,8 @@ import { isMotionPaused, motionChange } from './motion.js';
     const amount=smooth(.015,.67,d);
     if(amount>0){
       const depth=!isMotionPaused()&&window.TDCJourney?TDCJourney.state.depth:0;
-      const s=Math.max(W/underwater.naturalWidth,H/underwater.naturalHeight)*(1.015+d*.025+depth*.035);
-      const w=underwater.naturalWidth*s,h=underwater.naturalHeight*s,compression=(H-line)/H;
+      const s=Math.max(W/(underwater.naturalWidth||underwater.width),H/(underwater.naturalHeight||underwater.height))*(1.015+d*.025+depth*.035);
+      const w=(underwater.naturalWidth||underwater.width)*s,h=(underwater.naturalHeight||underwater.height)*s,compression=(H-line)/H;
       water.setTransform(dpr,0,0,dpr,0,0);water.globalCompositeOperation='source-over';water.clearRect(0,0,W,H);
       water.drawImage(underwater,(W-w)/2+Math.sin(t*.17)*1.2,line+(H-h)/2*compression,w,h*compression);
       const mask=water.createLinearGradient(0,line,0,H);mask.addColorStop(0,'rgba(255,255,255,.56)');mask.addColorStop(.36,'#fff');mask.addColorStop(1,'#fff');
@@ -101,7 +116,7 @@ import { isMotionPaused, motionChange } from './motion.js';
   }
   function drawWildlife(line,t,d,dt){
     wildlife.update(dt,d,t);
-    ctx.save();waterClip(line,t,d,true);ctx.globalAlpha=smooth(.18,.65,d)*.72;ctx.drawImage(wildlife.canvas,0,0,W,H);ctx.restore();
+    ctx.save();waterClip(line,t,d,true);ctx.globalAlpha=smooth(.18,.65,d)*.84;ctx.drawImage(wildlife.canvas,0,0,W,H);ctx.restore();
   }
   function logoRect(d){
     const drift=!isMotionPaused()&&window.TDCJourney?TDCJourney.state.drift:0;
@@ -174,19 +189,17 @@ import { isMotionPaused, motionChange } from './motion.js';
       canvas.dataset.renderer='canvas';
       document.body.dataset.ready='true';
     }
+    prepareUnderwater();
     if(!paused)schedule();
   }
   async function init(){
     try{
       if(!ctx)throw new Error('Canvas 2D is unavailable');
       resize();
-      [background,logo,underwater]=await Promise.all([loadImage('assets/lake-dusk.png'),loadImage('assets/logo.png'),loadImage(underwaterSource())]);
-      wildlife=new TDCWildlife();await wildlife.ready;wildlife.resize(W,H);
+      [background,logo]=await Promise.all([loadImage('assets/lake-dusk.webp'),loadImage('assets/logo.webp')]);
+      underwater=waterBackdrop();
+      wildlife=new TDCWildlife({defer:true});wildlife.resize(W,H);
       reflection=prepareReflection(background);box=bounds(logo);
-      watchUnderwater(underwater, image => {
-        underwater=image;
-        schedule();
-      });
       ready=true;schedule();
     }catch(error){console.error(error);}
   }

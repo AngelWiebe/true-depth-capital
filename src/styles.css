@@ -166,8 +166,8 @@ body[data-motion="paused"]:not(.at-surface) #scene,
 body[data-motion="paused"] .atmosphere{visibility:hidden}
 
 body[data-motion="paused"] .stage {
-  --still-water: url(/assets/underwater-reef.png);
-  background: linear-gradient(#061925b8, #061925d4), var(--still-water) center / cover no-repeat, #061925;
+  --still-water: url(/assets/underwater-reef.webp);
+  background: linear-gradient(#061925a3, #061925c2), var(--still-water) center / cover no-repeat, #061925;
 }
 
 body[data-motion="paused"].at-surface #scene { transform: translateY(var(--still-offset, 0px)); }
@@ -175,7 +175,7 @@ body[data-motion="paused"] .scene-shade { opacity: 0; }
 body[data-motion="paused"] .hero::before { mask-image: linear-gradient(black 68%, transparent); }
 
 @media(max-width:600px) {
-  body[data-motion="paused"] .stage { --still-water: url(/assets/underwater-portrait.png); }
+  body[data-motion="paused"] .stage { --still-water: url(/assets/underwater-portrait.webp); }
 }
 .hero::before{
   content:"";
@@ -183,7 +183,7 @@ body[data-motion="paused"] .hero::before { mask-image: linear-gradient(black 68%
   inset:0 0 auto;
   height:100svh;
   z-index:-1;
-  background:linear-gradient(transparent 48%,#061925),url(/assets/logo.png) center 23.5% / min(78%, 600px, 80svh) auto no-repeat,url(/assets/lake-dusk.png) center / cover no-repeat;
+  background:linear-gradient(transparent 48%,#061925),url(/assets/logo.webp) center 23.5% / min(78%, 600px, 80svh) auto no-repeat,url(/assets/lake-dusk.webp) center / cover no-repeat;
 }
 body[data-ready="true"]:not([data-motion="paused"]) .hero::before,
 body[data-ready="true"][data-motion="paused"].at-surface .hero::before{display:none}

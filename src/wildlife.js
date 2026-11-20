@@ -1,3 +1,5 @@
+import { loadImage } from './images.js';
+
 (() => {
   'use strict';
 
@@ -13,15 +15,6 @@
   ];
   // Herring offsets relative to a fish length. Each member shares the school's heading.
   const school = [[1.55, -.15], [.65, -.52], [.61, .32], [-.26, -.13], [-.55, .69], [-1.22, -.64], [-1.57, .12]];
-
-  function loadImage(src) {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = reject;
-      image.src = src;
-    });
-  }
 
   function crop(image, [left, top, width, height]) {
     const sprite = document.createElement('canvas');
@@ -48,7 +41,7 @@
   }
 
   window.TDCWildlife = class {
-    constructor() {
+    constructor({ defer = false } = {}) {
       this.canvas = document.createElement('canvas');
       this.canvas.width = 640;
       this.canvas.height = 420;
@@ -56,7 +49,13 @@
       this.W = 1;
       this.H = 1;
       this.swimmers = [];
-      this.ready = loadImage('assets/pacific-wildlife.png').then(image => {
+      this.ready = null;
+      if (!defer) this.load();
+    }
+
+    load() {
+      if (this.ready) return this.ready;
+      this.ready = loadImage('assets/pacific-wildlife.webp').then(image => {
         this.swimmers = species.map((profile, index) => ({
           profile,
           image: crop(image, regions[index]),
@@ -67,7 +66,11 @@
           phase: random(0, 2 * Math.PI),
           delay: random(3, 8),
         })).sort((a, b) => a.profile.depth - b.profile.depth);
+      }).catch(error => {
+        this.ready = null;
+        throw error;
       });
+      return this.ready;
     }
 
     resize(w, h) {
@@ -103,7 +106,7 @@
         ctx.translate(swimmer.x * this.W, y);
         ctx.scale(swimmer.direction, 1);
         ctx.rotate(Math.sin(time * .57 + phase) * profile.pitch);
-        ctx.globalAlpha = .26 + profile.depth * .56;
+        ctx.globalAlpha = .34 + profile.depth * .60;
 
         formation.forEach(([across, down], index) => {
           const memberPhase = phase + index * .86;

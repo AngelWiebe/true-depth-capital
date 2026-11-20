@@ -4,7 +4,7 @@ The True Depth Capital website presents Canadian vehicle sourcing and wholesale 
 
 ## Getting started
 
-Use Node.js 20 or 22.
+Use Node.js 22.12 or newer in the Node 22 release line, or Node.js 24. If you use nvm, run `nvm use` to select the version recorded in `.nvmrc`.
 
 ```sh
 npm ci
@@ -40,6 +40,8 @@ Publish the contents of `dist/`. Vite copies the files in `public/` into the bui
 | `public/robots.txt`, `public/sitemap.xml` | Search discovery |
 
 ## Scene and accessibility
+
+The lake and logo render first, using compressed WebP assets. Image requests time out after 15 seconds so stalled requests can recover through the retry logic. Underwater artwork and the wildlife atlas load after the opening frame, so they can finish independently. With motion paused, animated artwork is deferred until motion is enabled.
 
 The mountain lake transitions into an underwater scene containing a wolf eel, giant Pacific octopus, China rockfish and a small school of Pacific herring. Their sizes, paths and movement are configured in `src/wildlife.js`.
 
@@ -86,6 +88,8 @@ The additional domains are intended to redirect permanently to the corresponding
 Set up redirects and HTTPS through the domain or hosting configuration. Include configured `www` variants. Submit `https://truedepthcapital.ca/sitemap.xml` to Search Console after publishing.
 
 ## Verification
+
+Run the unit suite with `npm test`, or `npm run test:watch` while editing. Tests use Vitest and jsdom to exercise enquiry validation, payloads, delivery errors and retries, motion preferences, and responsive artwork loading. Form requests are mocked. Tests also cover menu focus, the privacy dialog, renderer failures, and rendering budgets.
 
 `npm run build` verifies that Vite can produce the production bundle. Browser checks during development covered Chrome and macOS WebKit, responsive layouts, motion controls, artwork loading failures, orientation changes, menu focus and the privacy dialog. Form success and retry behaviour were checked using simulated service responses.
 

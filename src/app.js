@@ -1,3 +1,5 @@
+import { retryableLoad, waterBackdrop } from './loading.js';
+import { renderSize, uploadCanvas } from './rendering.js';
 import { loadImage, underwaterSource, watchUnderwater } from './artwork.js';
 import { isMotionPaused, motionChange } from './motion.js';
 
@@ -113,7 +115,7 @@ import { isMotionPaused, motionChange } from './motion.js';
       color+=vec3(.44,.63,.67)*rim*gate*glimmer*.26;
       // Fish are behind the metal and inherit the surrounding water's colour.
       vec4 fish=texture2D(u_wildlife,uv);
-      vec3 fishColor=mix(water,fish.rgb*vec3(.58,.78,.85),.75);
+      vec3 fishColor=mix(water,fish.rgb*vec3(.76,.90,.96),.82);
       color=mix(color,fishColor,fish.a*below*smoothstep(.18,.65,u_dive));
       vec4 logo=mark(p,below,depth);
       color=mix(color,logo.rgb,logo.a);
@@ -139,6 +141,33 @@ import { isMotionPaused, motionChange } from './motion.js';
     if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const message=gl.getShaderInfoLog(s);gl.deleteShader(s);throw new Error(message);}return s;
   }
   let fishTexture, underwaterTexture;
+  const fishAllocation = {};
+  const loadUnderwater = retryableLoad(
+    () => loadImage(underwaterSource()),
+    image => {
+      const apply = image => {
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, underwaterTexture);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+        underwater=image;
+        schedule();
+      };
+      apply(image);
+      watchUnderwater(image, apply, events.signal);
+    },
+    events.signal,
+  );
+  const loadWildlife = retryableLoad(
+    () => wildlife.load(),
+    () => schedule(),
+    events.signal,
+  );
+
+  function prepareUnderwater() {
+    if (isMotionPaused() || stopped) return;
+    loadUnderwater();
+    loadWildlife();
+  }
   function texture(im,unit,name){
     gl.activeTexture(gl.TEXTURE0+unit);const tx=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tx);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
@@ -163,15 +192,15 @@ import { isMotionPaused, motionChange } from './motion.js';
   function updateTarget(){travel=Math.max(1,section.offsetHeight-stage.offsetHeight);target=window.TDCJourney?TDCJourney.target():clamp((scrollY-section.offsetTop)/travel);schedule();}
   function resize(){
     W=stage.clientWidth;H=stage.clientHeight;
-    const budget=W<650?1550000:2300000;
-    ratio=Math.max(.8,Math.min(devicePixelRatio||1,2,Math.sqrt(budget/(W*H)))*quality);
-    const width=Math.round(W*ratio),height=Math.round(H*ratio);
+    const dimensions=renderSize(W,H,devicePixelRatio,quality);
+    ratio=dimensions.ratio;
+    const {width,height}=dimensions;
     if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;gl.viewport(0,0,width,height);}
     if(overlay){overlay.width=Math.round(W*Math.min(ratio,1.5));overlay.height=Math.round(H*Math.min(ratio,1.5));}
     wildlife.resize(W,H);updateTarget();schedule();
   }
   function moveTo(p){window.scrollTo({top:section.offsetTop+clamp(p)*travel,behavior:isMotionPaused()?'instant':'smooth'});}
-  function cover(im,zoom){const s=Math.max(W/im.naturalWidth,H/im.naturalHeight)*zoom,w=im.naturalWidth*s,h=im.naturalHeight*s;return[(W-w)/2,(H-h)/2,w,h];}
+  function cover(im,zoom){const width=im.naturalWidth||im.width,height=im.naturalHeight||im.height;const s=Math.max(W/width,H/height)*zoom,w=width*s,h=height*s;return[(W-w)/2,(H-h)/2,w,h];}
   function logoRect(d){
     const drift=!isMotionPaused()&&window.TDCJourney?TDCJourney.state.drift:0;
     const scale=Math.min(W*.82/logo.width,H*.455/logo.height)*mix(1,.84,d)*mix(1,.72,drift),w=logo.width*scale,h=logo.height*scale;
@@ -179,6 +208,7 @@ import { isMotionPaused, motionChange } from './motion.js';
   }
   function sprite(bubble){
     const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');
+    if(!x)return c;
     const g=x.createRadialGradient(32,32,bubble?16:0,32,32,30);
     g.addColorStop(0,bubble?'#8cc9d400':'#d4f1f4');g.addColorStop(bubble?.72:.16,bubble?'#8cc9d411':'#bfe8ec99');g.addColorStop(bubble?.95:1,bubble?'#ceeff14a':'#bfe8ec00');
     if(bubble)g.addColorStop(1,'#ceeff100');x.fillStyle=g;x.beginPath();x.arc(32,32,30,0,Math.PI*2);x.fill();
@@ -216,8 +246,11 @@ import { isMotionPaused, motionChange } from './motion.js';
     const d=smooth(.02,.98,progress),time=clock,line=H*(.65-d*.85),rect=logoRect(d),energy=clamp(Math.abs(progress-before)*50);
     const s=Math.max(W/background.naturalWidth,H/background.naturalHeight,H*.65/(background.naturalHeight*.633))*(1+Math.sin(d*Math.PI)*.025);
     const bw=background.naturalWidth*s,bh=background.naturalHeight*s;
-    wildlife.update(paused?0:Math.min(elapsed,48)*.001,d,time);
-    gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,fishTexture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,wildlife.canvas);
+    if(!paused&&d>=.16&&wildlife.swimmers.length){
+      wildlife.update(Math.min(elapsed,48)*.001,d,time);
+      gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,fishTexture);
+      uploadCanvas(gl,wildlife.canvas,fishAllocation);
+    }
     gl.uniform2f(uniforms.size,W,H);gl.uniform2f(uniforms.pointer,pointer[0],pointer[1]);
     gl.uniform4f(uniforms.backRect,(W-bw)/2+pointer[0]*2,line-bh*.633,bw,bh);
     const depth=!isMotionPaused()&&window.TDCJourney?TDCJourney.state.depth:0,opacity=!isMotionPaused()&&window.TDCJourney?TDCJourney.state.logoOpacity:1;
@@ -226,12 +259,13 @@ import { isMotionPaused, motionChange } from './motion.js';
     gl.uniform1f(uniforms.logoOpacity,opacity);gl.uniform1f(uniforms.depth,depth);
     const contact=smooth(-H*.05,H*.04,rect[1]+rect[3]-line)*(1-smooth(H*.02,H*.18,rect[1]-line));gl.uniform1f(uniforms.contact,contact);
     gl.drawArrays(gl.TRIANGLES,0,6);particles(d,time,line,rect,energy);updateUI();
-    if(!paused&&elapsed>30&&elapsed<80)slowFrames++;else slowFrames=Math.max(0,slowFrames-1);
-    if(slowFrames>75&&quality>.68){quality*=.87;slowFrames=0;resize();}
+    if(!paused&&elapsed>30)slowFrames++;else slowFrames=Math.max(0,slowFrames-1);
+    if(slowFrames>75&&quality>.68){quality=Math.max(.68,quality*.87);slowFrames=0;resize();}
     if(canvas.dataset.renderer!=='webgl'){
       canvas.dataset.renderer='webgl';
       document.body.dataset.ready='true';
     }
+    prepareUnderwater();
     if(!paused)schedule();
   }
   function fallback(reason){
@@ -245,8 +279,9 @@ import { isMotionPaused, motionChange } from './motion.js';
     try{
       gl=canvas.getContext('webgl',{alpha:false,antialias:false,depth:false,stencil:false,powerPreference:'high-performance',premultipliedAlpha:false});
       if(!gl){fallback();return;}
-      [background,underwater,logo]=await Promise.all([loadImage('assets/lake-dusk.png'),loadImage(underwaterSource()),loadImage('assets/logo.png')]);
-      logo=crop(logo);wildlife=new TDCWildlife();await wildlife.ready;initializeGL();
+      [background,logo]=await Promise.all([loadImage('assets/lake-dusk.webp'),loadImage('assets/logo.webp')]);
+      underwater=waterBackdrop();
+      logo=crop(logo);wildlife=new TDCWildlife({defer:true});initializeGL();
       overlay=document.createElement('canvas');overlay.className='atmosphere';overlay.setAttribute('aria-hidden','true');canvas.after(overlay);ink=overlay.getContext('2d');
       const options={passive:true,signal:events.signal};
       window.addEventListener('scroll',updateTarget,options);window.addEventListener('resize',resize,options);
@@ -255,13 +290,6 @@ import { isMotionPaused, motionChange } from './motion.js';
       motionChange.addEventListener('change',()=>{lastTime=0;progress=target;schedule();},{signal:events.signal});
       document.addEventListener('visibilitychange',()=>{if(document.hidden){if(raf)cancelAnimationFrame(raf);raf=0;}else{lastTime=0;schedule();}},{signal:events.signal});
       canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();fallback('Graphics context lost');},{signal:events.signal});
-      watchUnderwater(underwater, image => {
-        gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, underwaterTexture);
-        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
-        underwater=image;
-        schedule();
-      }, events.signal);
       ready=true;resize();schedule();
     }catch(error){fallback(error.message);}
   }

@@ -21,7 +21,7 @@ import { isMotionPaused } from './motion.js';
     state.drift=smooth(height*.28,height*1.15,y);
     state.logoOpacity=1-smooth(height*(innerWidth<701?.43:.55),height*(innerWidth<701?1.05:1.2),y);
     root.style.setProperty('--page',state.page.toFixed(5));
-    root.style.setProperty('--veil',(smooth(height*.47,height*1.12,y)*(.83+state.depth*.05)).toFixed(4));
+    root.style.setProperty('--veil',(smooth(height*.47,height*1.12,y)*(.72+state.depth*.05)).toFixed(4));
     root.style.setProperty('--route',smooth(positions[1]-height*.4,positions[1]+height*.35,y).toFixed(4));
     body.classList.toggle('is-reading',y>height*.4);
     body.classList.toggle('at-surface',y<height);

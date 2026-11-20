@@ -1,23 +1,19 @@
+import { loadImage } from './images.js';
+export { loadImage };
+
 const portraitViewport = matchMedia('(max-width: 600px)');
 
-export function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error(`Unable to load ${src}`));
-    image.src = src;
-  });
-}
-
 export function underwaterSource() {
-  return portraitViewport.matches ? 'assets/underwater-portrait.png' : 'assets/underwater-reef.png';
+  return portraitViewport.matches ? 'assets/underwater-portrait.webp' : 'assets/underwater-reef.webp';
 }
 
 export function watchUnderwater(initialImage, onChange, signal) {
   let current = initialImage;
+  let retryTimer;
   const images = new Map([[initialImage.getAttribute('src'), Promise.resolve(initialImage)]]);
 
   async function update() {
+    clearTimeout(retryTimer);
     const source = underwaterSource();
     if (signal?.aborted || source === current.getAttribute('src')) return;
 
@@ -36,10 +32,18 @@ export function watchUnderwater(initialImage, onChange, signal) {
         current = image;
       }
     } catch (error) {
-      if (!signal?.aborted) console.warn(error);
+      if (!signal?.aborted) {
+        console.warn(error);
+        if (underwaterSource() === source && current.getAttribute('src') !== source) {
+          clearTimeout(retryTimer);
+          retryTimer = setTimeout(update, 5000);
+        }
+      }
     }
   }
 
   portraitViewport.addEventListener('change', update, { signal });
+  window.addEventListener('online', update, { signal });
+  signal?.addEventListener('abort', () => clearTimeout(retryTimer), { once: true });
   update();
 }
