@@ -22,6 +22,14 @@ npm run preview
 
 Publish the contents of `dist/`. Vite copies the files in `public/` into the build and bundles the scripts and styles. Generated files and installed dependencies are excluded from Git.
 
+## GitHub Pages deployment
+
+In the repository’s **Settings → Pages → Build and deployment**, select **GitHub Actions** as the source.
+
+The workflow in `.github/workflows/deploy-pages.yml` runs on pushes to `main`. It installs dependencies with `npm ci`, runs the unit tests, builds the site using the production Formspree configuration, and deploys `dist/` to the `github-pages` environment. You can also start it from the Actions tab with **Run workflow** on `main`.
+
+Set the custom domain to `truedepthcapital.ca` in the repository’s Pages settings when its DNS is ready. The workflow uses the repository’s automatic token.
+
 ## Main files
 
 | Location | Purpose |
