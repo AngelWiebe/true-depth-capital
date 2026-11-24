@@ -17,7 +17,7 @@ import { isMotionPaused } from './motion.js';
   function update(){
     const y=Math.max(0,scrollY);
     state.visual=clamp(y/diveEnd);state.page=clamp(y/travel);
-    state.depth=smooth(positions[3]-height*.35,positions[6]-height*.3,y);
+    state.depth=smooth(positions[3]-height*.35,positions.at(-1)-height*.3,y);
     state.drift=smooth(height*.28,height*1.15,y);
     state.logoOpacity=1-smooth(height*(innerWidth<701?.43:.55),height*(innerWidth<701?1.05:1.2),y);
     root.style.setProperty('--page',state.page.toFixed(5));
@@ -77,7 +77,7 @@ import { isMotionPaused } from './motion.js';
   document.querySelectorAll('a[href^="#"]').forEach(link=>link.addEventListener('click',e=>{
     const target=document.getElementById(link.hash.slice(1));if(!target)return;
     e.preventDefault();closeMenu();
-    const offset=masthead.offsetHeight+12;
+    const offset=masthead.getBoundingClientRect().bottom+(target.id==='pricing'?28:12);
     const y=Math.max(0,target.getBoundingClientRect().top+scrollY-(target.id==='surface'?0:offset));
     history.replaceState(null,'',link.hash);
     window.scrollTo({top:y,behavior:isMotionPaused()?'instant':'smooth'});
@@ -89,7 +89,14 @@ import { isMotionPaused } from './motion.js';
   }else document.querySelectorAll('.reveal').forEach(el=>el.classList.add('is-visible'));
   window.addEventListener('scroll',update,{passive:true});
   window.addEventListener('resize',()=>{if(!resizeFrame)resizeFrame=requestAnimationFrame(()=>{resizeFrame=0;measure();});},{passive:true});
-  window.addEventListener('load',measure,{once:true});
+  function alignPricingHash(){
+    if(location.hash!=='#pricing')return;
+    const pricing=document.getElementById('pricing');
+    const top=pricing.getBoundingClientRect().top+scrollY-masthead.getBoundingClientRect().bottom-28;
+    window.scrollTo({top:Math.max(0,top),behavior:'instant'});
+  }
+  window.addEventListener('load',()=>{measure();requestAnimationFrame(alignPricingHash);},{once:true});
+  window.addEventListener('hashchange',alignPricingHash);
   if('ResizeObserver' in window){
     const observer=new ResizeObserver(()=>{if(!resizeFrame)resizeFrame=requestAnimationFrame(()=>{resizeFrame=0;measure();});});
     observer.observe(document.querySelector('.journey-content'));

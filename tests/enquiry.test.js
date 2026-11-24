@@ -145,3 +145,56 @@ test.each(['', 'https://example.com/f/invalid'])('missing or invalid endpoints k
   expect(document.getElementById('enquiry-intro').textContent).toContain('email app');
   expect(fetch).not.toHaveBeenCalled();
 });
+
+test.each(['Harbour', 'Bluewater', 'Deep Dive'])('%s CTA selects sourcing and sends the chosen package', async name => {
+  await start();
+  document.querySelector(`[data-package="${name}"]`).click();
+  expect(form.elements.kind.value).toBe('sourcing');
+  expect(form.elements.package.value).toBe(name);
+  expect(form.elements.package.disabled).toBe(false);
+  expect(form.elements.year.disabled).toBe(true);
+  expect(form.elements.company.disabled).toBe(true);
+  expect(form.elements.message.required).toBe(true);
+  form.elements.message.value = 'Looking for a late-model SUV.';
+  send();
+  await tick();
+  const data=fetch.mock.calls[0][1].body;
+  expect(data.get('kind')).toBe('sourcing');
+  expect(data.get('package')).toBe(name);
+  expect(data.get('subject')).toBe('True Depth Capital sourcing enquiry');
+  expect(data.has('year')).toBe(false);
+  expect(data.has('company')).toBe(false);
+  expect(success.hidden).toBe(false);
+});
+
+test('sourcing can be chosen without a package and does not leak into seller enquiries', async () => {
+  await start();
+  form.querySelector('[value="sourcing"]').click();
+  expect(form.elements.package.value).toBe('');
+  expect(form.elements.package.required).toBe(false);
+  form.elements.package.value='Deep Dive';
+  form.querySelector('[value="vehicle"]').click();
+  expect(form.elements.package.disabled).toBe(true);
+  send();
+  await tick();
+  expect(fetch.mock.calls[0][1].body.has('package')).toBe(false);
+});
+
+test('switching package CTAs after a completed enquiry resets the form to the new selection', async () => {
+  await start();
+  send();
+  await tick();
+  document.querySelector('[data-package="Bluewater"]').click();
+  expect(form.hidden).toBe(false);
+  expect(success.hidden).toBe(true);
+  expect(form.elements.kind.value).toBe('sourcing');
+  expect(form.elements.package.value).toBe('Bluewater');
+});
+
+test('sourcing email fallback includes the selected package', async () => {
+  await start('');
+  document.querySelector('[data-package="Harbour"]').click();
+  expect(submit.textContent).toContain('Email sourcing enquiry');
+  expect(form.elements.kind.value).toBe('sourcing');
+  expect(form.elements.package.value).toBe('Harbour');
+});

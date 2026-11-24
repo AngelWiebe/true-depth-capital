@@ -244,3 +244,134 @@ body[data-ready="true"][data-motion="paused"].at-surface .hero::before{display:n
 .privacy-copy h3 { margin: 24px 0 8px; font-size: 21px; }
 .privacy-copy p { margin: 0 0 12px; font-size: 15px; letter-spacing: normal; }
 .privacy-copy a { color: var(--accent); font-size: inherit; text-decoration: underline; overflow-wrap: anywhere; }
+
+/* Sourcing packages echo the light and deep-water panels of the pricing artwork. */
+.pricing-section { padding-top: 28px; padding-bottom: 24px; scroll-margin-top: 32px; }
+.pricing-inner { width: 100%; max-width: 1160px; margin-inline: auto; }
+.pricing-heading { max-width: 760px; margin: 0 auto 18px; text-align: center; }
+.pricing-heading .eyebrow { margin-bottom: 10px; }
+.pricing-heading .lead { margin: 0; font-size: 17px; line-height: 1.5; }
+.pricing-heading h2 { margin-bottom: 10px; font-size: clamp(40px, 3.6vw, 52px); }
+.pricing-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.pricing-card {
+  display: flex; flex-direction: column; align-items: stretch; min-width: 0; padding: 14px 22px;
+  color: #092337; border: 1px solid #cee7f3; border-radius: 24px;
+  background: radial-gradient(ellipse at 40% 5%, #fffffff2, transparent 65%), linear-gradient(115deg, #c6deecf7, #f3fafffa 43%, #d9eaf4f5 75%, #b5d0e3f2);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 2px #ffffffb3, inset -2px -2px 8px #3d719421, 0 9px 24px #00101d66;
+}
+.package-icon { width: 80px; height: 44px; margin: 0 auto 1px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pricing-card h3 { margin: 0 6px; padding-bottom: 4px; border-bottom: 1px solid #163c5a40; font: 700 18px/1.25 Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: .16em; text-align: center; color: inherit; }
+.pricing-featured {
+  color: #f1f7fa; border: 2px solid #19caff; --tow-window: #002139;
+  background: radial-gradient(ellipse at 50% 0%, #096aa099, transparent 55%), linear-gradient(135deg, #002c4df7, #00172ef7 65%, #003958f5);
+  box-shadow: 0 0 2px #27d8ff, 0 0 10px #00aaffb3, inset 0 0 5px #00bfff73;
+}
+.pricing-featured h3 { border-color: #c4e4f34d; }
+.package-price { margin: 0 6px 10px; padding: 5px 0; border-bottom: 1px solid #163c5a40; font: 600 46px/1.05 Georgia, 'Times New Roman', serif; color: inherit; letter-spacing: -.035em; text-align: center; }
+.pricing-featured .package-price { border-color: #c4e4f34d; }
+.package-features { list-style: none; margin: 0 0 12px; padding: 0; flex: 1; align-self: center; width: max-content; max-width: 100%; }
+.package-features li { position: relative; padding-left: 25px; margin-bottom: 9px; font-size: 14px; font-weight: 600; line-height: 1.3; color: inherit; }
+.package-features li::before { content: "✓"; position: absolute; left: 0; top: 2px; width: 16px; height: 16px; border: 1px solid currentColor; border-radius: 50%; font-size: 12px; line-height: 15px; text-align: center; }
+.package-features small { display: block; font-size: 12px; line-height: 1.25; font-style: italic; color: #0b5e80; }
+.pricing-featured .package-features small { color: #8ce4fa; }
+.pricing-featured .package-icon { color: #81e4ff; }
+.package-transport { display: flex; align-items: center; gap: 10px; padding: 10px 0; margin: auto 6px 0; border-top: 1px solid #163c5a40; }
+.package-transport svg { width: 49px; height: 32px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.package-transport p { padding-left: 10px; border-left: 1px solid currentColor; margin: 0; color: inherit; font-size: 12px; line-height: 1.35; }
+.package-transport strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .16em; }
+.pricing-featured .package-transport { border-color: #c4e4f34d; }
+.pricing-card .action-button { width: 100%; min-height: 40px; font-size: 14px; padding: 8px 12px; border: 1px solid #24465d; border-radius: 22px; background: linear-gradient(#f9fdff94, #c4d8e5b3); color: #092337; font-weight: 600; }
+.pricing-card .action-button:hover { background: #f3faff; }
+.pricing-card .ui-arrow { color: inherit; }
+.pricing-featured .action-button {
+  background: linear-gradient(#21b8f0 0%, #006caa 32%, #00446f 60%, #087ca9 100%); border-color: #b3f2ff; color: #fff;
+  box-shadow: 0 0 11px #12ceff99, inset 0 2px 3px #e7fcffcc, inset 0 -2px 4px #001a3880;
+}
+.pricing-featured .action-button:hover { background: linear-gradient(#1286b6, #003653); }
+.pricing-services {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch;
+  margin: 12px 0 14px; border: 2px solid #39d8ff; border-radius: 22px;
+  background: linear-gradient(110deg, #005382f5, #001a2ff5 52%, #003652f5);
+  box-shadow: 0 0 5px #95edffcc, 0 0 14px #00adff66, inset 0 0 8px #25baf04d;
+  overflow: hidden;
+}
+.services-label {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 9px 20px 9px 14px; text-align: center;
+  background: linear-gradient(145deg, #13b3ef, #006ea8 40%, #003b67 78%, #087bad);
+  box-shadow: inset 0 2px 5px #a0f1ff80, inset 0 -3px 6px #001a4859;
+  clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%);
+}
+.services-label h3 { margin: 0 0 3px; font: italic 700 16px/1.25 Arial, Helvetica, sans-serif; text-transform: uppercase; color: #fff; }
+.services-label p { margin: 0; font-size: 12px; font-style: italic; text-transform: uppercase; color: #a2efff; font-weight: 600; }
+.service-item { display: flex; align-items: center; gap: 15px; padding: 12px 18px; min-width: 0; }
+.service-item + .service-item { position: relative; }
+.service-item + .service-item::before { content: ""; position: absolute; inset: 12px auto 12px 0; width: 1px; background: #b9e5f2a6; }
+.service-item svg { width: 46px; height: 46px; flex: none; fill: none; stroke: #e7f8ff; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.service-item h4 { margin: 0 0 4px; font-size: 12px; line-height: 1.35; text-transform: uppercase; color: #f1f8fc; }
+.service-price { margin: 0; color: #fff; font: 600 26px/1.05 Georgia, 'Times New Roman', serif; }
+.service-price span { font: italic 600 14px/1.4 Arial, Helvetica, sans-serif; white-space: nowrap; }
+.service-item .service-includes { margin: 2px 0 0; font-size: 11px; line-height: 1.35; font-style: italic; color: #d6ebf5; }
+.truckload-banner {
+  display: grid; grid-template-columns: 1.2fr 1fr; align-items: center; gap: 16px;
+  width: 100%; padding: 9px 24px 9px 12px; border: 2px solid #6ee3ff; border-radius: 30px;
+  background: radial-gradient(ellipse at 25% 100%, #16476294, transparent 70%), linear-gradient(115deg, #062c43ed, #001927f5);
+  box-shadow: 0 0 8px #6bdfff99, 0 0 25px #1ac5ec40, inset 0 0 10px #65dcff66;
+}
+.truckload-banner img { display: block; width: 100%; height: clamp(124px, 10.8vw, 158px); object-fit: contain; filter: drop-shadow(0 5px 7px #0008); }
+.truckload-banner > div { padding-left: 22px; border-left: 1px solid #c9eaf27a; }
+.truckload-banner h3 { font: 800 clamp(23px, 2.4vw, 34px)/1.1 Arial, Helvetica, sans-serif; text-transform: uppercase; font-style: italic; margin-bottom: 8px; }
+.truckload-banner em { color: #35cfff; font-style: inherit; }
+.truckload-banner p { max-width: 420px; font-size: 15px; line-height: 1.5; margin: 0; color: #dcecf4; }
+.truckload-purchase { white-space: nowrap; }
+.pricing-disclaimers { margin: 19px 6px 0; }
+.pricing-disclaimers p { margin: 0 0 5px; font-size: 12px; line-height: 1.65; color: #c6dce8; }
+.form-field select {
+  width: 100%; min-height: 45px; padding: 11px 12px; border: 1px solid #a4c9dc70;
+  border-radius: 3px; background: #082736; color: #f1f7fa; font: inherit;
+}
+.form-field select:focus-visible { outline: 2px solid #add8ee; outline-offset: 3px; }
+#sourcing-fields { margin-bottom: 20px; }
+@media (min-width: 701px) and (max-width: 1100px) {
+  .header-nav { gap: 14px; }
+  .masthead { gap: 16px; padding-inline: 4vw; }
+  .brand { font-size: 10px; }
+  .header-nav .nav-contact { padding: 10px 12px; }
+}
+@media (max-width: 900px) {
+  .pricing-grid { gap: 12px; }
+  .pricing-card { padding: 12px 16px; }
+  .pricing-card h3 { font-size: 16px; letter-spacing: .12em; }
+  .package-features li { font-size: 14px; }
+  .pricing-services { grid-template-columns: 1fr 1fr; }
+  .services-label { grid-column: 1 / -1; clip-path: none; padding: 12px; }
+}
+@media (max-width: 700px) {
+  .pricing-section { padding-top: 24px; padding-bottom: 30px; }
+  .pricing-heading { margin-bottom: 24px; }
+  .pricing-heading h2 { font-size: 39px; }
+  .pricing-heading .lead { font-size: 16px; }
+  .pricing-grid, .truckload-banner { grid-template-columns: 1fr; }
+  .pricing-grid { gap: 18px; }
+  .pricing-card { padding: 18px 24px; }
+  .package-icon { height: 45px; width: 78px; margin-bottom: 4px; }
+  .pricing-card h3 { font-size: 18px; letter-spacing: .16em; }
+  .package-features { margin-bottom: 14px; }
+  .package-features li { margin-bottom: 10px; line-height: 1.5; }
+  .package-price { padding-block: 9px; margin-bottom: 14px; }
+  .pricing-services { margin: 25px 0; }
+  .pricing-services { grid-template-columns: 1fr; border-radius: 20px; }
+  .services-label { grid-column: auto; clip-path: none; padding: 18px; }
+  .service-item { padding: 18px 20px; }
+  .service-item h4 { font-size: 12px; }
+  .service-item .service-includes { font-size: 12px; }
+  .service-item + .service-item::before { inset: 0 20px auto; width: auto; height: 1px; }
+  .truckload-banner { padding: 20px; gap: 18px; border-radius: 24px; }
+  .truckload-banner > div { padding: 18px 0 0; border-left: 0; border-top: 1px solid #c9eaf27a; }
+  .truckload-banner img { max-width: 480px; height: auto; margin: 0 auto; transform: none; }
+  .truckload-banner h3 { font-size: 29px; }
+  .form-field select { font-size: 16px; }
+  .enquiry-type { flex-wrap: wrap; }
+  .enquiry-type label { flex: 1 1 120px; }
+}

@@ -10,6 +10,7 @@ const form = document.getElementById('enquiry-form');
 const radios = [...form.querySelectorAll('[name="kind"]')];
 const vehicleFields = document.getElementById('vehicle-fields');
 const dealerFields = document.getElementById('dealer-fields');
+const sourcingFields = document.getElementById('sourcing-fields');
 const error = document.getElementById('enquiry-error');
 const success = document.getElementById('enquiry-success');
 const submit = form.querySelector('[type="submit"]');
@@ -24,32 +25,61 @@ if (endpoint) {
     'When you submit an enquiry online, Formspree processes the details you enter and sends them to True Depth Capital. Those details may include your name, contact information, vehicle or dealership details, and your message.';
 }
 
+const enquiryTypes = {
+  vehicle: {
+    title: 'Tell us about your vehicle.',
+    intro: 'Share the basics about the vehicle you’d like to sell.',
+    messageLabel: 'Condition and anything else we should know (optional)',
+    placeholder: 'Trim, condition, history, asking price or other useful details',
+    label: 'vehicle enquiry',
+  },
+  dealer: {
+    title: 'Let’s talk U.S. wholesale.',
+    intro: 'Tell us about your licensed U.S. dealership and the vehicles you’re looking for.',
+    messageLabel: 'What vehicles are you looking for? *',
+    placeholder: 'Vehicle types, preferred specifications or a wholesale enquiry',
+    label: 'dealer enquiry',
+  },
+  sourcing: {
+    title: 'Let’s source your next vehicle.',
+    intro: 'Choose a package and tell us about the vehicle you’re looking for. We’ll follow up to discuss your request.',
+    messageLabel: 'What vehicle are you looking for? *',
+    placeholder: 'Make, model, budget, preferred specifications and timing',
+    label: 'sourcing enquiry',
+  },
+};
+
 function setKind(kind) {
+  const config = enquiryTypes[kind];
+  const seller = kind === 'vehicle';
   const dealer = kind === 'dealer';
+  const sourcing = kind === 'sourcing';
   radios.forEach(radio => { radio.checked = radio.value === kind; });
-  vehicleFields.hidden = dealer;
+  vehicleFields.hidden = !seller;
   dealerFields.hidden = !dealer;
-  vehicleFields.querySelectorAll('input').forEach(input => { input.disabled = dealer; input.required = !dealer && input.hasAttribute('data-vehicle-required'); });
+  sourcingFields.hidden = !sourcing;
+  vehicleFields.querySelectorAll('input').forEach(input => {
+    input.disabled = !seller;
+    input.required = seller && input.hasAttribute('data-vehicle-required');
+  });
   dealerFields.querySelectorAll('input').forEach(input => { input.disabled = !dealer; input.required = dealer; });
-  message.required = dealer;
-  document.getElementById('enquiry-title').textContent = dealer ? 'Let’s talk U.S. wholesale.' : 'Tell us about your vehicle.';
-  const instructions = dealer
-    ? 'Tell us about your licensed U.S. dealership and the vehicles you’re looking for.'
-    : 'Share the basics about the vehicle you’d like to sell.';
-  intro.textContent = endpoint ? instructions : `${instructions} The button opens a draft in your email app.`;
-  document.getElementById('message-label').textContent = dealer ? 'What vehicles are you looking for? *' : 'Condition and anything else we should know (optional)';
-  message.placeholder = dealer ? 'Vehicle types, preferred specifications or a wholesale enquiry' : 'Trim, condition, history, asking price or other useful details';
+  form.elements.package.disabled = !sourcing;
+  message.required = !seller;
+  document.getElementById('enquiry-title').textContent = config.title;
+  intro.textContent = endpoint ? config.intro : `${config.intro} The button opens a draft in your email app.`;
+  document.getElementById('message-label').textContent = config.messageLabel;
+  message.placeholder = config.placeholder;
   const verb = endpoint ? 'Send' : 'Email';
-  submitLabel.textContent = dealer ? `${verb} dealer enquiry` : `${verb} vehicle enquiry`;
+  submitLabel.textContent = `${verb} ${config.label}`;
   const deliveryNote = endpoint
     ? 'Your enquiry goes directly to True Depth Capital.'
     : 'Review and send the draft from your email app.';
   const photoNote = endpoint
     ? 'You can email photos separately after submitting. Include the name you used on the enquiry.'
     : 'You can attach photos to the draft before sending it.';
-  submitNote.textContent = dealer
-    ? deliveryNote
-    : `${deliveryNote} ${photoNote} Submitting a vehicle does not commit either party to a purchase.`;
+  submitNote.textContent = seller
+    ? `${deliveryNote} ${photoNote} Submitting a vehicle does not commit either party to a purchase.`
+    : deliveryNote;
   error.hidden = true;
 }
 radios.forEach(radio => radio.addEventListener('change', () => setKind(radio.value)));
@@ -57,6 +87,7 @@ document.querySelectorAll('[data-enquiry]').forEach(link => link.addEventListene
   if (submit.disabled) return;
   if (!success.hidden) resetForm();
   setKind(link.dataset.enquiry);
+  if (link.dataset.package) form.elements.package.value = link.dataset.package;
 }, { capture: true }));
 function validateContact() {
   email.setCustomValidity(email.value.trim() || phone.value.trim() ? '' : 'Please include an email address or phone number so we can reply.');
@@ -71,21 +102,26 @@ function value(name) {
 function composeMail() {
   const kind = radios.find(radio => radio.checked).value;
   const dealer = kind === 'dealer';
-  const subject = dealer
+  const seller = kind === 'vehicle';
+  const sourcing = kind === 'sourcing';
+  const subject = sourcing
+    ? `Vehicle sourcing enquiry: ${value('package') || 'Help me choose'}`
+    : dealer
     ? `U.S. dealer enquiry from ${value('name')}`
     : `Vehicle enquiry: ${value('year')} ${value('make')} ${value('model')}`.replace(/\s+/g, ' ').trim();
   const lines = [
-    dealer ? 'U.S. dealer enquiry' : 'Vehicle enquiry',
+    sourcing ? 'Vehicle sourcing enquiry' : dealer ? 'U.S. dealer enquiry' : 'Vehicle enquiry',
+    sourcing && `Package: ${value('package') || 'Help me choose'}`,
     '',
     `Name: ${value('name')}`,
     value('email') && `Email: ${value('email')}`,
     value('phone') && `Phone: ${value('phone')}`,
     dealer && `Dealership: ${value('company')}`,
     dealer && `Dealership location: ${value('dealerLocation')}`,
-    !dealer && `Vehicle: ${value('year')} ${value('make')} ${value('model')}`,
-    !dealer && `Mileage: ${value('mileage')} km`,
-    !dealer && `Location: ${value('location')}`,
-    !dealer && value('vin') && `VIN: ${value('vin')}`,
+    seller && `Vehicle: ${value('year')} ${value('make')} ${value('model')}`,
+    seller && `Mileage: ${value('mileage')} km`,
+    seller && `Location: ${value('location')}`,
+    seller && value('vin') && `VIN: ${value('vin')}`,
     value('message') && '',
     value('message') && value('message'),
   ].filter(Boolean);
@@ -130,7 +166,7 @@ form.addEventListener('submit', async event => {
 
   const data = new FormData(form);
   data.delete('website');
-  data.set('subject', data.get('kind') === 'dealer' ? 'True Depth Capital dealer enquiry' : 'True Depth Capital vehicle enquiry');
+  data.set('subject', `True Depth Capital ${enquiryTypes[data.get('kind')].label}`);
 
   const availableControls = [...form.elements].filter(control => !control.disabled);
   const originalLabel = submitLabel.textContent;
