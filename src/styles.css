@@ -277,7 +277,7 @@ body[data-ready="true"][data-motion="paused"].at-surface .hero::before{display:n
 .pricing-featured .package-features small { color: #8ce4fa; }
 .pricing-featured .package-icon { color: #81e4ff; }
 .package-transport { display: flex; align-items: center; gap: 10px; padding: 10px 0; margin: auto 6px 0; border-top: 1px solid #163c5a40; }
-.package-transport svg { width: 49px; height: 32px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.package-transport svg { width: 56px; height: 35px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .package-transport p { padding-left: 10px; border-left: 1px solid currentColor; margin: 0; color: inherit; font-size: 12px; line-height: 1.35; }
 .package-transport strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .16em; }
 .pricing-featured .package-transport { border-color: #c4e4f34d; }
