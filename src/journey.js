@@ -51,6 +51,18 @@ import { isMotionPaused } from './motion.js';
     travel=Math.max(1,document.getElementById('experience').offsetHeight-height);
     update();
   }
+  function sectionTop(target) {
+    const clearance = target.id === 'pricing' ? 28 : 12;
+    const offset = target.id === 'surface' ? 0 : masthead.getBoundingClientRect().bottom + clearance;
+    return Math.max(0, target.getBoundingClientRect().top + scrollY - offset);
+  }
+  function requestMeasure() {
+    if (resizeFrame) return;
+    resizeFrame = requestAnimationFrame(() => {
+      resizeFrame = 0;
+      measure();
+    });
+  }
   function closeMenu(restoreFocus=false){
     menu.hidden=true;toggle.setAttribute('aria-expanded','false');body.classList.remove('menu-open');
     menuBackground.forEach(element=>{element.inert=false;});
@@ -77,8 +89,7 @@ import { isMotionPaused } from './motion.js';
   document.querySelectorAll('a[href^="#"]').forEach(link=>link.addEventListener('click',e=>{
     const target=document.getElementById(link.hash.slice(1));if(!target)return;
     e.preventDefault();closeMenu();
-    const offset=masthead.getBoundingClientRect().bottom+(target.id==='pricing'?28:12);
-    const y=Math.max(0,target.getBoundingClientRect().top+scrollY-(target.id==='surface'?0:offset));
+    const y=sectionTop(target);
     history.replaceState(null,'',link.hash);
     window.scrollTo({top:y,behavior:isMotionPaused()?'instant':'smooth'});
     target.setAttribute('tabindex','-1');target.focus({preventScroll:true});
@@ -88,17 +99,16 @@ import { isMotionPaused } from './motion.js';
     document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
   }else document.querySelectorAll('.reveal').forEach(el=>el.classList.add('is-visible'));
   window.addEventListener('scroll',update,{passive:true});
-  window.addEventListener('resize',()=>{if(!resizeFrame)resizeFrame=requestAnimationFrame(()=>{resizeFrame=0;measure();});},{passive:true});
+  window.addEventListener('resize',requestMeasure,{passive:true});
   function alignPricingHash(){
     if(location.hash!=='#pricing')return;
     const pricing=document.getElementById('pricing');
-    const top=pricing.getBoundingClientRect().top+scrollY-masthead.getBoundingClientRect().bottom-28;
-    window.scrollTo({top:Math.max(0,top),behavior:'instant'});
+    window.scrollTo({top:sectionTop(pricing),behavior:'instant'});
   }
   window.addEventListener('load',()=>{measure();requestAnimationFrame(alignPricingHash);},{once:true});
   window.addEventListener('hashchange',alignPricingHash);
   if('ResizeObserver' in window){
-    const observer=new ResizeObserver(()=>{if(!resizeFrame)resizeFrame=requestAnimationFrame(()=>{resizeFrame=0;measure();});});
+    const observer=new ResizeObserver(requestMeasure);
     observer.observe(document.querySelector('.journey-content'));
     observer.observe(masthead);
   }

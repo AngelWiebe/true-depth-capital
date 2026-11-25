@@ -7,14 +7,12 @@ import { isMotionPaused, motionChange } from './motion.js';
   'use strict';
   let canvas = document.getElementById('scene');
   const stage = document.getElementById('stage'), section = document.getElementById('experience');
-  const root = document.documentElement;
   const clamp = (x, a=0, b=1) => Math.max(a, Math.min(b, x));
   const mix = (a,b,t) => a+(b-a)*t;
   const smooth = (a,b,x) => { const t=clamp((x-a)/(b-a)); return t*t*(3-2*t); };
   const events = new AbortController(), uniforms = {};
-  const chapters = [...document.querySelectorAll('.chapter')];
   let gl, program, overlay, ink, logo, background, underwater, wildlife;
-  let W=1,H=1,ratio=1,travel=1,target=0,progress=0,phase=-1,ready=false,raf=0;
+  let W=1,H=1,ratio=1,travel=1,target=0,progress=0,ready=false,raf=0;
   let lastTime=0,clock=0,lastUI=-1,stopped=false,quality=1,slowFrames=0;
   let pointer=[0,0],pointerTarget=[0,0];
   const seed=n=>{const a=Math.sin(n*127.1+311.7)*43758.5453;return a-Math.floor(a);};
@@ -199,7 +197,6 @@ import { isMotionPaused, motionChange } from './motion.js';
     if(overlay){overlay.width=Math.round(W*Math.min(ratio,1.5));overlay.height=Math.round(H*Math.min(ratio,1.5));}
     wildlife.resize(W,H);updateTarget();schedule();
   }
-  function moveTo(p){window.scrollTo({top:section.offsetTop+clamp(p)*travel,behavior:isMotionPaused()?'instant':'smooth'});}
   function cover(im,zoom){const width=im.naturalWidth||im.width,height=im.naturalHeight||im.height;const s=Math.max(W/width,H/height)*zoom,w=width*s,h=height*s;return[(W-w)/2,(H-h)/2,w,h];}
   function logoRect(d){
     const drift=!isMotionPaused()&&window.TDCJourney?TDCJourney.state.drift:0;

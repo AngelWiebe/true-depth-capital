@@ -21,7 +21,10 @@ beforeEach(async () => {
   });
   await import('../src/journey.js');
 });
-afterEach(() => listeners.abort());
+afterEach(() => {
+  listeners.abort();
+  history.replaceState(null,'',location.pathname);
+});
 
 test('opening the menu isolates content and Escape restores focus', () => {
   const toggle=document.querySelector('.menu-toggle');
@@ -53,4 +56,52 @@ test('choosing a section releases the menu and focuses the destination', () => {
   expect(document.querySelector('main').inert).toBe(false);
   expect(document.activeElement.id).toBe('contact');
   expect(window.scrollTo).toHaveBeenCalled();
+});
+
+function placePricing() {
+  vi.spyOn(document.querySelector('.masthead'),'getBoundingClientRect').mockReturnValue({bottom:104});
+  vi.spyOn(document.querySelector('#pricing'),'getBoundingClientRect').mockReturnValue({top:1200});
+}
+
+test('Pricing navigation clears the fixed header and focuses the section without extra scrolling', () => {
+  placePricing();
+  const pricing=document.querySelector('#pricing');
+  const focus=vi.spyOn(pricing,'focus');
+  document.querySelector('.header-nav a[href="#pricing"]').click();
+  expect(window.scrollTo).toHaveBeenLastCalledWith({top:1068,behavior:'smooth'});
+  expect(location.hash).toBe('#pricing');
+  expect(focus).toHaveBeenCalledWith({preventScroll:true});
+  expect(document.activeElement).toBe(pricing);
+});
+
+test('paused motion navigates without smooth scrolling', () => {
+  placePricing();
+  document.querySelector('.motion-toggle').click();
+  document.querySelector('.header-nav a[href="#pricing"]').click();
+  expect(window.scrollTo).toHaveBeenLastCalledWith({top:1068,behavior:'instant'});
+});
+
+test('direct Pricing links are aligned after page load', () => {
+  placePricing();
+  history.replaceState(null,'','#pricing');
+  window.dispatchEvent(new Event('load'));
+  const callbacks=requestAnimationFrame.mock.calls.map(([callback])=>callback);
+  callbacks.forEach(callback=>callback());
+  expect(window.scrollTo).toHaveBeenLastCalledWith({top:1068,behavior:'instant'});
+});
+
+test('hash changes to Pricing clear the header without moving unrelated destinations', () => {
+  placePricing();
+  history.replaceState(null,'','#pricing');
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+  expect(window.scrollTo).toHaveBeenLastCalledWith({top:1068,behavior:'instant'});
+  window.scrollTo.mockClear();
+  history.replaceState(null,'','#story');
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+  expect(window.scrollTo).not.toHaveBeenCalled();
+});
+
+test('reaching the surface never scrolls above the page', () => {
+  document.querySelector('.brand').click();
+  expect(window.scrollTo).toHaveBeenLastCalledWith({top:0,behavior:'smooth'});
 });

@@ -8,12 +8,8 @@ import { isMotionPaused, motionChange } from './motion.js';
   const ctx = canvas.getContext('2d', {alpha:false});
   const stage = document.getElementById('stage');
   const section = document.getElementById('experience');
-  const root = document.documentElement;
-  const buttons = [...document.querySelectorAll('.chapter')];
-  const cue = document.getElementById('cue-text');
-  const announce = document.getElementById('phase-announcement');
   let W=1, H=1, dpr=1, travel=1, target=0, progress=0, ready=false;
-  let background, reflection, underwater, wildlife, logo, box, phase=-1, lastTime=0, clock=0;
+  let background, reflection, underwater, wildlife, logo, box, lastTime=0, clock=0;
   const wetLogo=document.createElement('canvas'),wet=wetLogo.getContext('2d');
   const waterLayer=document.createElement('canvas'),water=waterLayer.getContext('2d');
   let frame=0, visible=true;
@@ -54,7 +50,6 @@ import { isMotionPaused, motionChange } from './motion.js';
     wetLogo.width=canvas.width;wetLogo.height=canvas.height;waterLayer.width=canvas.width;waterLayer.height=canvas.height;
     if(wildlife)wildlife.resize(W,H);
   }
-  function moveTo(p){window.scrollTo({top:section.offsetTop+clamp(p)*travel,behavior:isMotionPaused()?'instant':'smooth'});}
   window.addEventListener('scroll',updateTarget,{passive:true});
   window.addEventListener('resize',resize,{passive:true});
   motionChange.addEventListener('change',()=>{lastTime=0;progress=target;schedule();});

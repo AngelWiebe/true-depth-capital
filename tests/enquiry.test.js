@@ -198,3 +198,61 @@ test('sourcing email fallback includes the selected package', async () => {
   expect(form.elements.kind.value).toBe('sourcing');
   expect(form.elements.package.value).toBe('Harbour');
 });
+
+test('a failed sourcing enquiry retains the package and message for retry', async () => {
+  fetch.mockResolvedValueOnce({ok:false});
+  await start();
+  document.querySelector('[data-package="Deep Dive"]').click();
+  form.elements.message.value='Please source a hybrid SUV.';
+  send();
+  await tick();
+  expect(error.hidden).toBe(false);
+  expect(error.getAttribute('role')).toBe('alert');
+  expect(form.elements.package.value).toBe('Deep Dive');
+  expect(form.elements.package.disabled).toBe(false);
+  expect(form.elements.company.disabled).toBe(true);
+  expect(form.elements.year.disabled).toBe(true);
+  expect(form.elements.message.value).toBe('Please source a hybrid SUV.');
+  send();
+  await tick();
+  expect(fetch.mock.calls[1][1].body.get('package')).toBe('Deep Dive');
+  expect(success.hidden).toBe(false);
+});
+
+test('package CTAs cannot change a sourcing enquiry while it is being sent', async () => {
+  let finish;
+  fetch.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
+  await start();
+  document.querySelector('[data-package="Harbour"]').click();
+  form.elements.message.value='Looking for a pickup.';
+  send();
+  document.querySelector('[data-package="Deep Dive"]').click();
+  expect(form.elements.package.value).toBe('Harbour');
+  expect(fetch.mock.calls[0][1].body.get('package')).toBe('Harbour');
+  finish({ok:true});
+  await tick();
+  expect(success.hidden).toBe(false);
+});
+
+test.each(['email','phone'])('adding a %s clears the missing-reply-method error', async field => {
+  await start();
+  form.elements.phone.value='';
+  send();
+  expect(form.elements.email.validity.customError).toBe(true);
+  form.elements[field].value=field==='email'?'jane@example.com':'403-555-0100';
+  form.elements[field].dispatchEvent(new Event('input',{bubbles:true}));
+  expect(form.elements.email.validity.customError).toBe(false);
+  send();
+  await tick();
+  expect(fetch).toHaveBeenCalledOnce();
+  expect(success.hidden).toBe(false);
+});
+
+test('sourcing requires a description before sending', async () => {
+  await start();
+  document.querySelector('[data-package="Bluewater"]').click();
+  send();
+  expect(fetch).not.toHaveBeenCalled();
+  expect(form.elements.message.validity.valueMissing).toBe(true);
+  expect(form.hidden).toBe(false);
+});
